@@ -1,0 +1,118 @@
+// ═══════════════════════════════════════════
+// Ссылка на Google Sheets (CSV экспорт)
+// ═══════════════════════════════════════════
+var SHEET = 'https://docs.google.com/spreadsheets/d/1ajgtYHfuvliWDW6Yvk3B3HRI-5URzsSP4-KcACM4bN0/export?format=csv';
+// ═══════════════════════════════════════════
+
+var $ = function(id){ return document.getElementById(id); };
+var delay = function(ms){ return new Promise(function(r){ setTimeout(r, ms); }); };
+
+function setStep(id, cls){
+  var el = $(id);
+  if(el) el.className = 'uv-step ' + cls;
+}
+
+function showState(name){
+  ['stLoad','stOk','stFail','stNoId'].forEach(function(s){
+    var el = $(s);
+    if(el) el.style.display = (s === name) ? 'block' : 'none';
+  });
+}
+
+async function fetchBottle(code){
+  var url = SHEET + '&t=' + Date.now();
+  var resp = await fetch(url);
+  if(!resp.ok) throw new Error('fetch error');
+  var text = await resp.text();
+  var rows = text.trim().split('\n').map(function(r){
+    return r.split(',').map(function(c){ return c.trim().replace(/^"|"$/g,''); });
+  });
+  for(var i = 1; i < rows.length; i++){
+    var rc = rows[i][0];
+    if(rc && rc.trim().toUpperCase() === code.toUpperCase()){
+      return { aroma: rows[i][1], edition: rows[i][2], date: rows[i][3], limited: rows[i][4] };
+    }
+  }
+  return null;
+}
+
+async function uvRun(){
+  // Read ?id= from URL
+  var params = new URLSearchParams(window.location.search);
+  var id = params.get('id') || params.get('ID') || params.get('code') || params.get('serial');
+
+  if(!id){
+    showState('stNoId');
+    return;
+  }
+
+  var code = id.toUpperCase().replace(/\s/g,'');
+  showState('stLoad');
+
+  // Step 1
+  var lbl = $('loadLbl');
+  if(lbl) lbl.textContent = 'Считываю QR-код…';
+  setStep('ls1','active');
+  await delay(700);
+  setStep('ls1','done');
+
+  // Step 2 — fetch Google Sheets
+  if(lbl) lbl.textContent = 'Запрос к базе данных…';
+  setStep('ls2','active');
+
+  var bottle = null, err = false;
+  try {
+    bottle = await fetchBottle(code);
+  } catch(e) {
+    err = true;
+  }
+
+  setStep('ls2','done');
+
+  // Step 3
+  if(lbl) lbl.textContent = 'Верификация сертификата…';
+  setStep('ls3','active');
+  await delay(700);
+  setStep('ls3','done');
+  await delay(400);
+
+  // Show result
+  if(err){
+    var ft = $('failTxt');
+    if(ft) ft.innerHTML = 'Не удалось подключиться к базе данных.<br/>Проверьте интернет-соединение.';
+    showState('stFail');
+    var el = $('stFail');
+    if(el){ var lb = el.querySelector('.uv-errlabel'); if(lb) lb.style.color = 'var(--red)'; }
+    return;
+  }
+
+  if(!bottle){
+    var ft2 = $('failTxt');
+    if(ft2) ft2.innerHTML = 'Серийный номер <strong style="color:#f2ede6">"' + code + '"</strong> отсутствует в нашей базе данных.<br/><br/>Если вы приобрели товар у официального партнёра — свяжитесь с нами.';
+    showState('stFail');
+    return;
+  }
+
+  // SUCCESS
+  var title = $('okTitle');
+  if(title) title.innerHTML = 'Вы держите в руках флакон<br/><strong>#' + code + '</strong> из лимитированной<br/>коллекции <strong>Unimag</strong>';
+
+  var meta = $('okMeta');
+  if(meta) meta.innerHTML =
+    '<div class="uv-mi"><div class="uv-ml">Флакон №</div><div class="uv-mv">' + code + ' / ' + (bottle.limited||'—') + '</div></div>' +
+    '<div class="uv-mi"><div class="uv-ml">Аромат</div><div class="uv-mv">' + (bottle.aroma||'—') + '</div></div>' +
+    '<div class="uv-mi"><div class="uv-ml">Коллекция</div><div class="uv-mv">' + (bottle.edition||'—') + '</div></div>' +
+    '<div class="uv-mi"><div class="uv-ml">Дата выпуска</div><div class="uv-mv">' + (bottle.date||'—') + '</div></div>';
+
+  showState('stOk');
+}
+
+// Load Google Fonts if not already present
+if(!document.querySelector('link[href*="Cormorant"]')){
+  var lnk = document.createElement('link');
+  lnk.rel = 'stylesheet';
+  lnk.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Inter:wght@300;400;500;600&display=swap';
+  document.head.appendChild(lnk);
+}
+
+uvRun();

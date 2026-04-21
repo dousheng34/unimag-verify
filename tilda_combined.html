@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Проверка подлинности — Unimag</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#c9a96e;--gold2:#e8c98a;--dark:#07070d;--text:#f2ede6;--dim:rgba(242,237,230,0.45);--green:#5de08a;--red:#f07070;--border:rgba(255,255,255,0.08);--surface:rgba(255,255,255,0.04)}
+html,body{min-height:100%;background:var(--dark);font-family:'Inter',sans-serif;color:var(--text)}
+.bg{position:fixed;inset:0;background:radial-gradient(ellipse 70% 60% at 15% 20%,rgba(201,169,110,0.09) 0%,transparent 55%),radial-gradient(ellipse 50% 40% at 85% 80%,rgba(100,70,160,0.07) 0%,transparent 55%);pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.card{width:100%;max-width:480px;background:var(--surface);border:1px solid var(--border);border-radius:28px;padding:52px 44px 48px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0.5}
+
+/* Brand */
+.brand{text-align:center;margin-bottom:36px}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:400;letter-spacing:0.4em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.brand-sub{font-size:0.68rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--dim)}
+.brand-line{width:40px;height:1px;background:var(--gold);opacity:0.4;margin:12px auto 0}
+
+/* Shield */
+.shield{text-align:center;margin-bottom:32px}
+.shield svg{width:64px;height:64px}
+
+/* LOADING STATE */
+#stateLoading{text-align:center}
+.loading-ring{width:64px;height:64px;margin:0 auto 24px;position:relative}
+.loading-ring::before,.loading-ring::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid transparent}
+.loading-ring::before{border-top-color:var(--gold);animation:spin 1s linear infinite}
+.loading-ring::after{border-bottom-color:rgba(201,169,110,0.2);animation:spin 1.5s linear infinite reverse;inset:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-steps{display:flex;flex-direction:column;gap:8px;margin-top:20px;text-align:left}
+.lstep{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);opacity:0.3;transition:all 0.4s}
+.lstep.active{opacity:1;border-color:rgba(201,169,110,0.2);background:rgba(201,169,110,0.05)}
+.lstep.done{opacity:0.7}
+.ldot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background 0.4s}
+.lstep.active .ldot{background:var(--gold);box-shadow:0 0 8px rgba(201,169,110,0.5)}
+.lstep.done .ldot{background:var(--green)}
+.ltext{font-size:0.78rem;color:var(--dim);transition:color 0.4s}
+.lstep.active .ltext{color:var(--text)}
+.lstep.done .ltext{color:rgba(93,224,138,0.8)}
+.lcheck{margin-left:auto;font-size:0.8rem;opacity:0;transition:opacity 0.3s}
+.lstep.done .lcheck{opacity:1}
+.loading-label{font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+
+/* SUCCESS STATE */
+#stateSuccess{display:none;animation:revealUp 0.8s cubic-bezier(0.16,1,0.3,1) forwards}
+@keyframes revealUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.check-circle{width:72px;height:72px;margin:0 auto 20px;background:linear-gradient(135deg,rgba(93,224,138,0.15),rgba(40,160,80,0.08));border:1.5px solid rgba(93,224,138,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:popIn 0.6s cubic-bezier(0.175,0.885,0.32,1.275)}
+@keyframes popIn{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0)}}
+.check-circle svg{width:32px;height:32px;stroke:var(--green);stroke-width:2.5;fill:none}
+.verified-label{font-size:0.68rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--green);text-align:center;margin-bottom:20px}
+.bottle-headline{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;line-height:1.4;text-align:center;color:var(--text);margin-bottom:24px}
+.bottle-headline strong{color:var(--gold2);font-weight:600;font-style:italic}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
+.meta-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px 14px}
+.meta-label{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.14em;color:var(--dim);margin-bottom:4px}
+.meta-value{font-size:0.85rem;font-weight:500;color:var(--text)}
+.seal{text-align:center;font-size:0.68rem;color:var(--dim);letter-spacing:0.08em;padding-top:18px;border-top:1px solid var(--border);line-height:1.7}
+.seal span{color:var(--gold);opacity:0.7}
+
+/* ERROR STATE */
+#stateError{display:none;animation:revealUp 0.8s cubic-bezier(0.16,1,0.3,1) forwards;text-align:center}
+.error-circle{width:72px;height:72px;margin:0 auto 20px;background:linear-gradient(135deg,rgba(240,112,112,0.15),rgba(180,40,40,0.08));border:1.5px solid rgba(240,112,112,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:popIn 0.6s cubic-bezier(0.175,0.885,0.32,1.275)}
+.error-circle svg{width:32px;height:32px;stroke:var(--red);stroke-width:2.5;fill:none}
+.error-label{font-size:0.68rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--red);margin-bottom:16px}
+.error-text{font-size:0.85rem;color:var(--dim);line-height:1.7}
+
+/* NO ID STATE */
+#stateNoId{display:none;text-align:center}
+
+/* Footer */
+.footer-brand{text-align:center;margin-top:28px;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);opacity:0.5}
+
+@media(max-width:480px){
+  .card{padding:40px 28px 36px;border-radius:22px}
+  .meta-grid{grid-template-columns:1fr}
+  .bottle-headline{font-size:1.35rem}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="wrap">
+  <div class="card">
+
+    <div class="brand">
+      <div class="brand-name">Unimag</div>
+      <div class="brand-sub">Система проверки подлинности</div>
+      <div class="brand-line"></div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="stateLoading">
+      <div class="loading-ring"></div>
+      <div class="loading-label" id="loadLabel">Инициализация…</div>
+      <div class="loading-steps">
+        <div class="lstep" id="ls1"><div class="ldot"></div><div class="ltext">Считывание QR-кода</div><div class="lcheck">✓</div></div>
+        <div class="lstep" id="ls2"><div class="ldot"></div><div class="ltext">Запрос к базе данных Unimag</div><div class="lcheck">✓</div></div>
+        <div class="lstep" id="ls3"><div class="ldot"></div><div class="ltext">Верификация сертификата</div><div class="lcheck">✓</div></div>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div id="stateSuccess">
+      <div class="check-circle">
+        <svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6"/></svg>
+      </div>
+      <div class="verified-label">✦ Подлинность подтверждена ✦</div>
+      <div class="bottle-headline" id="headline"></div>
+      <div class="meta-grid" id="metaGrid"></div>
+      <div class="seal">
+        <span>✦</span> Этот продукт прошёл контроль качества<br/>
+        и является оригинальным изделием <strong style="color:var(--gold);font-weight:400">Unimag</strong>
+        <span>✦</span>
+      </div>
+    </div>
+
+    <!-- NOT FOUND -->
+    <div id="stateError">
+      <div class="error-circle">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="13"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div class="error-label">Код не распознан</div>
+      <div class="error-text" id="errorText"></div>
+    </div>
+
+    <!-- NO ID -->
+    <div id="stateNoId">
+      <div class="error-circle">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="13"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div class="error-label" style="color:var(--dim)">QR-код не определён</div>
+      <div class="error-text">Отсканируйте QR-код с флакона для проверки подлинности.</div>
+    </div>
+
+  </div>
+  <div class="footer-brand">Unimag · Authenticity Verification System</div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+//  НАСТРОЙКИ — измените только эту строку
+// ════════════════════════════════════════════════
+const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/1ajgtYHfuvliWDW6Yvk3B3HRI-5URzsSP4-KcACM4bN0/export?format=csv';
+// ════════════════════════════════════════════════
+
+const delay = ms => new Promise(r => setTimeout(r, ms));
+const $ = id => document.getElementById(id);
+const setStep = (id, cls) => $(id).className = 'lstep ' + cls;
+
+function showState(name) {
+  ['stateLoading','stateSuccess','stateError','stateNoId'].forEach(s => {
+    $(s).style.display = s === name ? 'block' : 'none';
+  });
+}
+
+async function fetchBottle(code) {
+  const url = SHEET_CSV + '&t=' + Date.now();
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('fetch failed');
+  const text = await resp.text();
+  const rows = text.trim().split('\n').map(r =>
+    r.split(',').map(c => c.trim().replace(/^"|"$/g, ''))
+  );
+  for (let i = 1; i < rows.length; i++) {
+    const [rc, aroma, edition, date, limited] = rows[i];
+    if (rc && rc.trim().toUpperCase() === code.toUpperCase()) {
+      return { aroma, edition, date, limited };
+    }
+  }
+  return null;
+}
+
+async function run() {
+  // 1. Read ?id= from URL
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id') || params.get('ID') || params.get('code');
+
+  if (!id) {
+    showState('stateNoId');
+    return;
+  }
+
+  const code = id.toUpperCase().replace(/\s/g, '');
+  showState('stateLoading');
+
+  // Step 1
+  $('loadLabel').textContent = 'Считываю QR-код…';
+  setStep('ls1', 'active');
+  await delay(700);
+  setStep('ls1', 'done');
+
+  // Step 2 — real fetch
+  $('loadLabel').textContent = 'Запрос к базе данных…';
+  setStep('ls2', 'active');
+
+  let bottle = null;
+  let err = false;
+  try {
+    bottle = await fetchBottle(code);
+  } catch(e) {
+    err = true;
+  }
+
+  setStep('ls2', 'done');
+
+  // Step 3
+  $('loadLabel').textContent = 'Верификация сертификата…';
+  setStep('ls3', 'active');
+  await delay(700);
+  setStep('ls3', 'done');
+  await delay(400);
+
+  if (err) {
+    $('errorText').innerHTML = 'Не удалось подключиться к базе данных.<br/>Пожалуйста, проверьте интернет-соединение.';
+    showState('stateError');
+    return;
+  }
+
+  if (!bottle) {
+    $('errorText').innerHTML = `Серийный номер <strong style="color:var(--text)">"${code}"</strong> отсутствует в нашей базе данных.<br/><br/>Если вы приобрели товар у официального партнёра — свяжитесь с нами.`;
+    showState('stateError');
+    return;
+  }
+
+  // SUCCESS
+  $('headline').innerHTML = `Вы держите в руках флакон<br/><strong>#${code}</strong> из лимитированной<br/>коллекции <strong>Unimag</strong>`;
+
+  $('metaGrid').innerHTML = `
+    <div class="meta-item"><div class="meta-label">Флакон №</div><div class="meta-value">${code} / ${bottle.limited || '—'}</div></div>
+    <div class="meta-item"><div class="meta-label">Аромат</div><div class="meta-value">${bottle.aroma || '—'}</div></div>
+    <div class="meta-item"><div class="meta-label">Коллекция</div><div class="meta-value">${bottle.edition || '—'}</div></div>
+    <div class="meta-item"><div class="meta-label">Дата выпуска</div><div class="meta-value">${bottle.date || '—'}</div></div>
+  `;
+
+  showState('stateSuccess');
+}
+
+run();
+</script>
+</body>
+</html>

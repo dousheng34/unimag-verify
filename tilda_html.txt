@@ -1,0 +1,58 @@
+<div id="uv-root">
+  <div class="uv-bg"></div>
+  <div class="uv-wrap">
+    <div class="uv-card">
+      <div class="uv-brand">
+        <div class="uv-bname">Unimag</div>
+        <div class="uv-bsub">Система проверки подлинности</div>
+        <div class="uv-bline"></div>
+      </div>
+
+      <!-- LOADING -->
+      <div id="stLoad">
+        <div class="uv-ring"></div>
+        <div class="uv-slabel" id="loadLbl">Инициализация…</div>
+        <div class="uv-steps">
+          <div class="uv-step" id="ls1"><div class="uv-dot"></div><div class="uv-stxt">Считывание QR-кода</div><div class="uv-schk">✓</div></div>
+          <div class="uv-step" id="ls2"><div class="uv-dot"></div><div class="uv-stxt">Запрос к базе данных Unimag</div><div class="uv-schk">✓</div></div>
+          <div class="uv-step" id="ls3"><div class="uv-dot"></div><div class="uv-stxt">Верификация сертификата</div><div class="uv-schk">✓</div></div>
+        </div>
+      </div>
+
+      <!-- SUCCESS -->
+      <div id="stOk" style="display:none">
+        <div class="uv-ok-icon">
+          <svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6"/></svg>
+        </div>
+        <div class="uv-verified">✦ Подлинность подтверждена ✦</div>
+        <div class="uv-headline" id="okTitle"></div>
+        <div class="uv-meta" id="okMeta"></div>
+        <div class="uv-seal">
+          <span>✦</span> Этот продукт прошёл контроль качества<br/>
+          и является оригинальным изделием <strong style="color:#c9a96e;font-weight:400">Unimag</strong>
+          <span>✦</span>
+        </div>
+      </div>
+
+      <!-- NOT FOUND -->
+      <div id="stFail" style="display:none">
+        <div class="uv-err-icon">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="13"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+        </div>
+        <div class="uv-errlabel">Код не распознан</div>
+        <div class="uv-errtxt" id="failTxt"></div>
+      </div>
+
+      <!-- NO QR -->
+      <div id="stNoId" style="display:none">
+        <div class="uv-err-icon">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="13"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+        </div>
+        <div class="uv-errlabel" style="color:rgba(242,237,230,0.45)">QR-код не определён</div>
+        <div class="uv-errtxt">Отсканируйте QR-код с флакона для проверки подлинности.</div>
+      </div>
+
+    </div>
+    <div class="uv-footer">Unimag · Authenticity Verification System</div>
+  </div>
+</div>
