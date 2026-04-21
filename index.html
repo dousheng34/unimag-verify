@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Проверка подлинности — Unimag</title>
+  <meta name="description" content="Проверьте подлинность вашего флакона Unimag по серийному номеру"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #c9a96e;
+      --gold2: #e8c98a;
+      --dark: #07070d;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --text: #f2ede6;
+      --text-dim: rgba(242,237,230,0.45);
+      --green: #5de08a;
+      --red: #f07070;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--dark);
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+    }
+
+    .bg {
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 15% 20%, rgba(201,169,110,0.09) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 85% 80%, rgba(100,70,160,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse 80% 50% at 50% 110%, rgba(201,169,110,0.05) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .particles { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .particle {
+      position: absolute; width: 2px; height: 2px;
+      background: var(--gold); border-radius: 50%; opacity: 0;
+      animation: floatUp var(--dur) var(--delay) infinite ease-in;
+    }
+    @keyframes floatUp {
+      0%   { opacity: 0; transform: translateY(0) scale(1); }
+      15%  { opacity: 0.6; }
+      85%  { opacity: 0.3; }
+      100% { opacity: 0; transform: translateY(-100vh) scale(0.3); }
+    }
+
+    .wrap {
+      position: relative; z-index: 1;
+      min-height: 100vh; display: flex;
+      flex-direction: column; align-items: center;
+      justify-content: center; padding: 24px;
+    }
+
+    .card {
+      width: 100%; max-width: 460px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 28px; padding: 48px 40px 44px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute;
+      top: 0; left: 10%; right: 10%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0.5;
+    }
+
+    /* Brand */
+    .brand { text-align: center; margin-bottom: 32px; }
+    .brand-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem; font-weight: 400;
+      letter-spacing: 0.35em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 4px;
+    }
+    .brand-sub {
+      font-size: 0.7rem; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--text-dim);
+    }
+    .brand-line { width: 40px; height: 1px; background: var(--gold); opacity: 0.4; margin: 10px auto 0; }
+
+    /* Shield icon */
+    .shield-wrap { text-align: center; margin-bottom: 28px; }
+    .shield-wrap svg { width: 56px; height: 56px; opacity: 0.7; }
+
+    /* Input section */
+    .input-section { margin-bottom: 20px; }
+    .input-label {
+      display: block; font-size: 0.7rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 10px;
+      text-align: center;
+    }
+    .input-row { display: flex; gap: 10px; }
+    .code-input {
+      flex: 1; padding: 14px 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text); font-size: 1.1rem;
+      font-family: 'Inter', sans-serif; letter-spacing: 0.12em;
+      outline: none; transition: border-color 0.3s;
+      text-align: center; text-transform: uppercase;
+    }
+    .code-input::placeholder { color: var(--text-dim); font-size: 0.9rem; letter-spacing: 0.05em; }
+    .code-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,169,110,0.1); }
+
+    .check-btn {
+      padding: 14px 22px; background: var(--gold);
+      color: #0a0a0a; border: none; border-radius: 12px;
+      font-size: 0.82rem; font-weight: 600;
+      letter-spacing: 0.08em; cursor: pointer;
+      transition: all 0.25s; white-space: nowrap;
+      font-family: 'Inter', sans-serif;
+    }
+    .check-btn:hover { background: var(--gold2); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,169,110,0.3); }
+    .check-btn:active { transform: translateY(0); }
+    .check-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .hint {
+      text-align: center; font-size: 0.72rem;
+      color: var(--text-dim); margin-top: 12px; line-height: 1.6;
+    }
+    .hint span { color: var(--gold); opacity: 0.8; }
+
+    /* Progress */
+    #progressSection { display: none; margin-top: 24px; }
+    .status-label {
+      text-align: center; font-size: 0.72rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 8px;
+    }
+    .status-bar { height: 2px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; margin-bottom: 20px; }
+    .status-fill {
+      height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2));
+      border-radius: 2px; width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .steps { display: flex; flex-direction: column; gap: 8px; }
+    .step {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 10px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      transition: all 0.4s ease; opacity: 0.3;
+    }
+    .step.active { opacity: 1; border-color: rgba(201,169,110,0.2); background: rgba(201,169,110,0.05); }
+    .step.done   { opacity: 0.7; }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: background 0.4s; }
+    .step.active .step-dot { background: var(--gold); box-shadow: 0 0 8px rgba(201,169,110,0.5); }
+    .step.done   .step-dot { background: var(--green); }
+    .step-text { font-size: 0.78rem; color: var(--text-dim); transition: color 0.4s; }
+    .step.active .step-text { color: var(--text); }
+    .step.done   .step-text { color: rgba(93,224,138,0.8); }
+    .step-check { margin-left: auto; font-size: 0.8rem; opacity: 0; transition: opacity 0.3s; }
+    .step.done .step-check { opacity: 1; }
+
+    /* Result panels */
+    #resultPanel, #notFoundPanel, #errorPanel { display: none; }
+    @keyframes revealUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .panel-visible { display: block !important; animation: revealUp 0.7s cubic-bezier(0.16,1,0.3,1) forwards; }
+
+    .result-badge {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; margin-bottom: 20px;
+    }
+    .badge-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, rgba(93,224,138,0.2), rgba(40,160,80,0.1));
+      border: 1px solid rgba(93,224,138,0.35);
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 1.2rem;
+      animation: popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    .badge-icon.red {
+      background: linear-gradient(135deg, rgba(240,112,112,0.2), rgba(180,40,40,0.1));
+      border-color: rgba(240,112,112,0.35);
+    }
+    @keyframes popIn {
+      from { transform: scale(0) rotate(-20deg); }
+      to   { transform: scale(1) rotate(0deg); }
+    }
+    .badge-text { font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); }
+    .badge-text.red { color: var(--red); }
+
+    .result-headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem; font-weight: 300;
+      line-height: 1.4; text-align: center;
+      color: var(--text); margin-bottom: 20px;
+    }
+    .result-headline strong { color: var(--gold2); font-weight: 600; font-style: italic; }
+
+    .result-meta {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-bottom: 20px;
+    }
+    .meta-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px; padding: 10px 12px;
+    }
+    .meta-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); margin-bottom: 3px; }
+    .meta-value { font-size: 0.82rem; font-weight: 500; color: var(--text); }
+
+    .result-seal {
+      text-align: center; font-size: 0.7rem;
+      color: var(--text-dim); letter-spacing: 0.08em;
+      padding-top: 16px; border-top: 1px solid var(--border);
+    }
+    .result-seal span { color: var(--gold); opacity: 0.7; }
+
+    .not-found-body { font-size: 0.82rem; text-align: center; color: var(--text-dim); line-height: 1.7; }
+
+    .try-again-btn {
+      display: block; width: 100%; margin-top: 20px;
+      padding: 12px; background: transparent;
+      border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text-dim); font-size: 0.8rem;
+      letter-spacing: 0.08em; cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.25s;
+    }
+    .try-again-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+    @media (max-width: 480px) {
+      .card { padding: 36px 24px 32px; border-radius: 20px; }
+      .input-row { flex-direction: column; }
+      .check-btn { width: 100%; }
+      .result-meta { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="particles" id="particles"></div>
+
+<div class="wrap">
+  <div class="card">
+
+    <div class="brand">
+      <div class="brand-name">Unimag</div>
+      <div class="brand-sub">Система проверки подлинности</div>
+      <div class="brand-line"></div>
+    </div>
+
+    <div class="shield-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(201,169,110,0.7)" stroke-width="1.2">
+        <path d="M12 2l7 4v6c0 4.5-3 8-7 10C5 20 2 16.5 2 12V6l10-4z"/>
+        <polyline points="9 12 11 14 15 10" stroke="rgba(201,169,110,0.9)" stroke-width="1.4"/>
+      </svg>
+    </div>
+
+    <!-- INPUT FORM -->
+    <div id="inputSection">
+      <div class="input-section">
+        <label class="input-label" for="codeInput">Введите серийный номер с флакона</label>
+        <div class="input-row">
+          <input
+            type="text" id="codeInput"
+            class="code-input"
+            placeholder="Например: 0842"
+            maxlength="10"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="check-btn" id="checkBtn" onclick="startVerification()">
+            Проверить
+          </button>
+        </div>
+      </div>
+      <p class="hint">
+        Серийный номер нанесён на дно флакона<br/>
+        или на внутреннюю сторону упаковки&nbsp;<span>№ _ _ _ _</span>
+      </p>
+    </div>
+
+    <!-- PROGRESS -->
+    <div id="progressSection">
+      <div class="status-label" id="statusLabel">Инициализация…</div>
+      <div class="status-bar"><div class="status-fill" id="statusFill"></div></div>
+      <div class="steps">
+        <div class="step" id="step1">
+          <div class="step-dot"></div>
+          <div class="step-text">Считывание серийного номера</div>
+          <div class="step-check">✓</div>
+        </div>
+        <div class="step" id="step2">
+          <div class="step-dot"></div>
+          <div class="step-text">Запрос к базе данных Unimag</div>
+          <div class="step-check">✓</div>
+        </div>
+        <div class="step" id="step3">
+          <div class="step-dot"></div>
+          <div class="step-text">Верификация сертификата</div>
+          <div class="step-check">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div id="resultPanel">
+      <div class="result-badge">
+        <div class="badge-icon">✓</div>
+        <div class="badge-text">Подлинность подтверждена</div>
+      </div>
+      <div class="result-headline">
+        Вы держите в руках флакон<br/>
+        <strong id="bottleNum">#0842</strong> — оригинал <strong>Unimag</strong>
+      </div>
+      <div class="result-meta" id="resultMeta"></div>
+      <div class="result-seal">
+        <span>✦</span> Этот продукт прошёл контроль качества<br/>и является оригинальным изделием Unimag <span>✦</span>
+      </div>
+      <button class="try-again-btn" onclick="resetForm()">← Проверить другой номер</button>
+    </div>
+
+    <!-- NOT FOUND -->
+    <div id="notFoundPanel">
+      <div class="result-badge">
+        <div class="badge-icon red">⚠</div>
+        <div class="badge-text red">Код не распознан</div>
+      </div>
+      <div class="not-found-body">
+        Серийный номер <strong id="notFoundCode" style="color:var(--text)"></strong>
+        отсутствует в нашей базе данных.<br/><br/>
+        Если вы приобрели товар у официального партнёра — свяжитесь с нами для уточнения.
+      </div>
+      <button class="try-again-btn" onclick="resetForm()">← Попробовать снова</button>
+    </div>
+
+    <!-- ERROR -->
+    <div id="errorPanel">
+      <div class="result-badge">
+        <div class="badge-icon red">!</div>
+        <div class="badge-text red">Ошибка соединения</div>
+      </div>
+      <div class="not-found-body">
+        Не удалось подключиться к базе данных.<br/>Проверьте интернет-соединение и попробуйте снова.
+      </div>
+      <button class="try-again-btn" onclick="resetForm()">← Попробовать снова</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  НАСТРОЙКИ — измените только эти две строки
+// ═══════════════════════════════════════════════════════
+
+// 1. Вставьте сюда ссылку из Google Sheets → Файл → Поделиться →
+//    Опубликовать в интернете → выбрать лист → CSV
+//    Пример: https://docs.google.com/spreadsheets/d/ВАШИ_ID/pub?output=csv
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1ajgtYHfuvliWDW6Yvk3B3HRI-5URzsSP4-KcACM4bN0/export?format=csv';
+
+// 2. Если хотите работать без Google Sheets (локальная база), 
+//    заполните объект BOTTLES ниже и установите USE_SHEETS = false
+const USE_SHEETS = true;
+
+// Локальная база (резервная / для теста)
+const BOTTLES_LOCAL = {
+  '842':  { aroma: 'Noir Absolu',    edition: 'Лимитированная 2025', date: 'Апрель 2025', limited: '1000' },
+  '0842': { aroma: 'Noir Absolu',    edition: 'Лимитированная 2025', date: 'Апрель 2025', limited: '1000' },
+  '737':  { aroma: 'Rose Éternelle', edition: 'Лимитированная 2025', date: 'Март 2025',   limited: '500'  },
+  '001':  { aroma: 'Ambre Précieux', edition: "Founder's Edition",   date: 'Январь 2025', limited: '100'  },
+};
+
+// ═══════════════════════════════════════════════════════
+
+// Частицы
+(function spawnParticles() {
+  const wrap = document.getElementById('particles');
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `left:${Math.random()*100}%;bottom:${Math.random()*20}%;--dur:${4+Math.random()*6}s;--delay:${Math.random()*6}s;`;
+    wrap.appendChild(p);
+  }
+})();
+
+// Enter key support
+document.getElementById('codeInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startVerification();
+});
+
+// ── Сброс формы ──
+function resetForm() {
+  document.getElementById('inputSection').style.display = 'block';
+  document.getElementById('progressSection').style.display = 'none';
+  document.getElementById('resultPanel').classList.remove('panel-visible');
+  document.getElementById('notFoundPanel').classList.remove('panel-visible');
+  document.getElementById('errorPanel').classList.remove('panel-visible');
+  document.getElementById('resultPanel').style.display = 'none';
+  document.getElementById('notFoundPanel').style.display = 'none';
+  document.getElementById('errorPanel').style.display = 'none';
+  document.getElementById('codeInput').value = '';
+  document.getElementById('codeInput').focus();
+  ['step1','step2','step3'].forEach(id => {
+    document.getElementById(id).className = 'step';
+  });
+  document.getElementById('statusFill').style.width = '0%';
+}
+
+// ── Считать Google Sheets CSV ──
+async function fetchFromSheets(code) {
+  const url = SHEET_CSV_URL + '&t=' + Date.now(); // cache-bust
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('Fetch failed');
+  const text = await resp.text();
+  const rows = text.trim().split('\n').map(r => r.split(',').map(c => c.trim().replace(/^"|"$/g, '')));
+  // Формат таблицы: Колонка A=код, B=аромат, C=коллекция, D=дата, E=тираж
+  for (let i = 1; i < rows.length; i++) {
+    const [rowCode, aroma, edition, date, limited] = rows[i];
+    if (rowCode && rowCode.trim() === code.trim()) {
+      return { aroma, edition, date, limited };
+    }
+  }
+  return null;
+}
+
+// ── Главная функция ──
+async function startVerification() {
+  const raw = document.getElementById('codeInput').value.trim();
+  if (!raw) {
+    document.getElementById('codeInput').focus();
+    document.getElementById('codeInput').style.borderColor = 'rgba(240,112,112,0.6)';
+    setTimeout(() => document.getElementById('codeInput').style.borderColor = '', 1500);
+    return;
+  }
+
+  const code = raw.toUpperCase().replace(/\s/g, '');
+
+  // Переключаем UI
+  document.getElementById('inputSection').style.display = 'none';
+  document.getElementById('progressSection').style.display = 'block';
+  document.getElementById('checkBtn').disabled = true;
+
+  const fill  = document.getElementById('statusFill');
+  const label = document.getElementById('statusLabel');
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  const setStep = (id, state) => document.getElementById(id).className = 'step ' + state;
+
+  // Шаг 1
+  label.textContent = 'Считываю серийный номер…';
+  fill.style.width = '15%';
+  setStep('step1', 'active');
+  await delay(800);
+  setStep('step1', 'done');
+  fill.style.width = '40%';
+
+  // Шаг 2 — здесь реальный запрос к Google Sheets
+  label.textContent = 'Запрос к базе данных…';
+  setStep('step2', 'active');
+
+  let bottle = null;
+  let fetchError = false;
+
+  try {
+    if (USE_SHEETS) {
+      bottle = await fetchFromSheets(code);
+    } else {
+      await delay(900);
+      bottle = BOTTLES_LOCAL[code] || BOTTLES_LOCAL[code.replace(/^0+/, '')] || null;
+    }
+  } catch (e) {
+    fetchError = true;
+  }
+
+  setStep('step2', 'done');
+  fill.style.width = '70%';
+
+  // Шаг 3
+  label.textContent = 'Верифицирую сертификат…';
+  setStep('step3', 'active');
+  await delay(800);
+  setStep('step3', 'done');
+  fill.style.width = '100%';
+  await delay(350);
+
+  document.getElementById('progressSection').style.display = 'none';
+  document.getElementById('checkBtn').disabled = false;
+
+  if (fetchError) {
+    document.getElementById('errorPanel').classList.add('panel-visible');
+    return;
+  }
+
+  if (bottle) {
+    document.getElementById('bottleNum').textContent = '#' + code;
+    document.getElementById('resultMeta').innerHTML = `
+      <div class="meta-item">
+        <div class="meta-label">Флакон №</div>
+        <div class="meta-value">${code} / ${bottle.limited || '—'}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Аромат</div>
+        <div class="meta-value">${bottle.aroma || '—'}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Коллекция</div>
+        <div class="meta-value">${bottle.edition || '—'}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Дата выпуска</div>
+        <div class="meta-value">${bottle.date || '—'}</div>
+      </div>
+    `;
+    document.getElementById('resultPanel').classList.add('panel-visible');
+  } else {
+    document.getElementById('notFoundCode').textContent = '"' + code + '"';
+    document.getElementById('notFoundPanel').classList.add('panel-visible');
+  }
+}
+</script>
+</body>
+</html>
